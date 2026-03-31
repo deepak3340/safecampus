@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Live Alerts{% endblock %}
+{% block topbar_title %}🌍 Live Disaster Alerts{% endblock %}
+{% block head %}
+<style>
+.alert-banner{background:linear-gradient(135deg,rgba(255,59,48,.1),rgba(255,107,53,.06));border:1px solid rgba(255,59,48,.25);border-radius:var(--r2);padding:1.25rem 1.5rem;display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;animation:border-pulse 2s infinite;}
+@keyframes border-pulse{0%,100%{border-color:rgba(255,59,48,.25);}50%{border-color:rgba(255,59,48,.6);}}
+.live-dot{width:10px;height:10px;background:var(--red);border-radius:50%;animation:pulse 1.2s infinite;flex-shrink:0;}
+.filters{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.filter-btn{padding:.35rem .875rem;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--muted2);font-family:var(--font);font-size:.78rem;cursor:pointer;transition:all .15s;font-weight:500;}
+.filter-btn.active,.filter-btn:hover{background:var(--orange);color:#fff;border-color:var(--orange);}
+.alerts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.alert-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.5rem;border-left:3px solid;}
+.alert-card.critical{border-left-color:var(--red);}
+.alert-card.high{border-left-color:var(--orange);}
+.alert-card.moderate{border-left-color:var(--amber);}
+.alert-card.low{border-left-color:var(--green);}
+.alert-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem;}
+.alert-region{font-weight:700;}
+.alert-risk-icon{font-size:1.5rem;}
+.alert-msg{color:var(--muted2);font-size:.85rem;line-height:1.55;margin-bottom:.75rem;}
+
+.regions-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:.75rem;margin-bottom:1.5rem;}
+.region-chip{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.875rem;text-align:center;}
+.region-name{font-size:.75rem;font-weight:600;margin-bottom:.3rem;}
+.region-level{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="content">
+  <div class="alert-banner">
+    <div class="live-dot"></div>
+    <div style="flex:1;"><strong style="color:var(--red);">⚠️ ACTIVE ADVISORY:</strong> Cyclone advisory for Odisha coastline. NDRF teams deployed. Follow official evacuation orders.</div>
+    <span class="badge badge-red">CRITICAL</span>
+  </div>
+
+  <!-- Region status -->
+  <div class="section-title">📍 Region Risk Status</div>
+  <div class="regions-grid">
+    {% for rid, r in regions.items() %}
+    {% set lc={'critical':'level-critical','high':'level-high','moderate':'level-moderate','low':'level-low'} %}
+    <div class="region-chip">
+      <div class="region-name">{{ r.name }}</div>
+      <div class="region-level {{ lc.get(r.level,'') }}">{{ r.level }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <button class="filter-btn active" onclick="filter('all',this)">All</button>
+    <button class="filter-btn" onclick="filter('critical',this)">🔴 Critical</button>
+    <button class="filter-btn" onclick="filter('high',this)">🟠 High</button>
+    <button class="filter-btn" onclick="filter('moderate',this)">🟡 Moderate</button>
+    <button class="filter-btn" onclick="filter('low',this)">🟢 Low</button>
+  </div>
+
+  <div class="alerts-grid" id="alerts-grid"><div class="skeleton" style="height:140px;"></div><div class="skeleton" style="height:140px;"></div><div class="skeleton" style="height:140px;"></div><div class="skeleton" style="height:140px;"></div></div>
+
+  <!-- Safety tips -->
+  <div class="card" style="margin-top:1.5rem;">
+    <div class="section-title">🛡️ General Safety Advisory</div>
+    <div class="g3">
+      <div style="background:var(--bg3);border-radius:var(--r);padding:1rem;"><div style="font-weight:600;margin-bottom:.4rem;">📱 Stay Informed</div><div style="color:var(--muted2);font-size:.82rem;">Keep your phone charged. Save NDMA (1078) and IMD offline. Enable emergency alerts.</div></div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:1rem;"><div style="font-weight:600;margin-bottom:.4rem;">🎒 Emergency Kit</div><div style="color:var(--muted2);font-size:.82rem;">Water (3L/person/day), food, first aid, torch, radio, important documents in waterproof pouch.</div></div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:1rem;"><div style="font-weight:600;margin-bottom:.4rem;">👨‍👩‍👧 Family Plan</div><div style="color:var(--muted2);font-size:.82rem;">Designate a meeting point. Know two evacuation routes. Share contacts with all family members.</div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let allAlerts=[];
+const riskIcons={Flood:'🌊',Earthquake:'🌍',Cyclone:'🌀',Drought:'☀️','Heat Wave':'🌡️',Landslide:'⛰️','Snow Storm':'❄️'};
+const levelBadge={critical:'badge-red',high:'badge-orange',moderate:'badge-amber',low:'badge-green'};
+
+async function loadAlerts(){
+  const r=await fetch('/api/alerts'); allAlerts=await r.json(); render(allAlerts);
+}
+function render(list){
+  if(!list.length){document.getElementById('alerts-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:2rem;">No alerts for this level.</div>';return;}
+  document.getElementById('alerts-grid').innerHTML=list.map(a=>`
+    <div class="alert-card ${a.level}">
+      <div class="alert-top">
+        <div><div class="alert-region">📍 ${a.region}</div><div style="color:var(--muted);font-size:.72rem;margin-top:2px;">${a.time}</div></div>
+        <div style="text-align:right;"><div class="alert-risk-icon">${riskIcons[a.risk]||'⚠️'}</div><span class="badge ${levelBadge[a.level]} " style="margin-top:4px;">${a.level.toUpperCase()}</span></div>
+      </div>
+      <div style="font-weight:600;margin-bottom:.4rem;">${a.risk} Alert</div>
+      <div class="alert-msg">${a.message}</div>
+    </div>`).join('');
+}
+function filter(level,btn){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render(level==='all'?allAlerts:allAlerts.filter(a=>a.level===level));
+}
+loadAlerts();
+</script>
+{% endblock %}

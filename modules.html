@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Learning Modules{% endblock %}
+{% block topbar_title %}📚 Learning Modules{% endblock %}
+{% block content %}
+<div class="content">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+    <div class="page-head" style="margin-bottom:0;"><h1>📚 Learning Modules</h1><p class="section-sub">{{ done|length }} of 6 modules completed</p></div>
+    <div style="display:flex;align-items:center;gap:.875rem;">
+      <div class="progress-track" style="width:140px;height:6px;"><div class="progress-fill" style="width:{{ (done|length / 6 * 100)|int }}%"></div></div>
+      <span style="font-family:var(--mono);font-size:.8rem;color:var(--muted2);">{{ (done|length / 6 * 100)|int }}%</span>
+    </div>
+  </div>
+
+  <div class="g3">
+    {% for m in modules %}
+    <div style="background:var(--bg2);border:1px solid {% if m.id in done %}rgba(0,214,143,.25){% else %}var(--border){% endif %};border-radius:var(--r2);padding:1.75rem;cursor:pointer;transition:all .3s;{% if m.id in done %}opacity:.8;{% endif %}" onclick="completeModule({{ m.id }},'{{ m.title }}')" onmouseover="this.style.borderColor='rgba(255,107,53,.3)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='{% if m.id in done %}rgba(0,214,143,.25){% else %}var(--border){% endif %}';this.style.transform=''">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+        <span style="font-size:2.75rem;">{{ m.icon }}</span>
+        {% if m.id in done %}<span class="badge badge-green">✅ Done</span>{% else %}<span class="badge badge-orange">+{{ m.pts }}pts</span>{% endif %}
+      </div>
+      <div style="font-size:1rem;font-weight:700;margin-bottom:.5rem;">{{ m.title }}</div>
+      <div style="color:var(--muted2);font-size:.85rem;line-height:1.55;margin-bottom:1.25rem;">{{ m.desc }}</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <span class="pill">⏱ {{ m.duration }}</span>
+        <span class="pill">📖 {{ m.lessons }} lessons</span>
+        <span class="pill" style="color:{% if m.difficulty=='Beginner' %}var(--green){% elif m.difficulty=='Intermediate' %}var(--amber){% else %}var(--orange){% endif %}">{{ m.difficulty }}</span>
+      </div>
+      <button class="btn {% if m.id in done %}btn-ghost{% else %}btn-primary{% endif %} btn-sm" style="width:100%;justify-content:center;">{{ '↺ Review' if m.id in done else '▶ Start Module' }}</button>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function completeModule(id,title){
+  const r=await fetch('/api/complete_module',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({module_id:id})});
+  const d=await r.json();
+  if(d.ok){ toast('✅ Module Completed!',`"${title}" — +${d.points} pts`,'var(--green)'); setTimeout(()=>location.reload(),1500); }
+}
+</script>
+{% endblock %}

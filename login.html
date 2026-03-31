@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Sign In{% endblock %}
+{% block bodyclass %}no-sidebar{% endblock %}
+{% block head %}
+<style>
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;}
+.login-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 50% 30%,rgba(255,107,53,.07) 0%,transparent 70%);}
+.login-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 60% 70% at 50% 40%,black,transparent);}
+.login-card{background:var(--bg1);border:1px solid var(--border2);border-radius:var(--r3);padding:2.5rem;width:100%;max-width:440px;position:relative;z-index:1;box-shadow:0 40px 80px rgba(0,0,0,.4);}
+.login-logo{display:flex;align-items:center;gap:.75rem;margin-bottom:2rem;}
+.login-logo-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--orange),var(--red));display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 4px 16px rgba(255,107,53,.3);}
+.login-title{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.35rem;}
+.login-sub{color:var(--muted2);font-size:.875rem;margin-bottom:2rem;}
+.login-btn{width:100%;padding:.875rem;background:linear-gradient(135deg,var(--orange),var(--red));color:#fff;border:none;border-radius:100px;font-family:var(--font);font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(255,107,53,.3);}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(255,107,53,.4);}
+.login-btn:active{transform:translateY(0);}
+.demo-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem;margin-top:1.5rem;}
+.demo-title{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:.75rem;}
+.demo-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;}
+.demo-row:last-child{margin-bottom:0;}
+.demo-info{font-size:.82rem;color:var(--muted2);}
+.demo-info code{font-family:var(--mono);color:var(--orange);font-size:.78rem;}
+.demo-use{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:.25rem .65rem;border-radius:6px;font-size:.75rem;cursor:pointer;transition:all .15s;font-family:var(--font);}
+.demo-use:hover{background:rgba(255,107,53,.15);border-color:rgba(255,107,53,.3);color:var(--orange);}
+.error-box{background:rgba(255,59,48,.08);border:1px solid rgba(255,59,48,.25);border-radius:var(--r);padding:.75rem 1rem;font-size:.85rem;color:#ff7070;display:none;margin-bottom:1rem;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="login-wrap">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🛡️</div>
+      <div style="font-size:1.1rem;font-weight:700;">Safe<span style="color:var(--orange);">Campus</span></div>
+    </div>
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Sign in to your account to continue</div>
+
+    <div id="error-box" class="error-box"></div>
+
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input type="text" id="uname" class="form-input" placeholder="Enter your username" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" id="pw" class="form-input" placeholder="Enter your password" autocomplete="current-password">
+    </div>
+
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign In →</button>
+
+    <div class="demo-box">
+      <div class="demo-title">🔑 Demo Accounts</div>
+      <div class="demo-row">
+        <span class="demo-info">👩‍💼 Admin <code>admin / admin123</code></span>
+        <button class="demo-use" onclick="fill('admin','admin123')">Use</button>
+      </div>
+      <div class="demo-row">
+        <span class="demo-info">🎓 Student <code>priya / pass123</code></span>
+        <button class="demo-use" onclick="fill('priya','pass123')">Use</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function fill(u,p){
+  document.getElementById('uname').value=u;
+  document.getElementById('pw').value=p;
+}
+async function doLogin(){
+  const btn=document.getElementById('login-btn');
+  const err=document.getElementById('error-box');
+  btn.textContent='Signing in…';btn.disabled=true;
+  err.style.display='none';
+  const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('uname').value,password:document.getElementById('pw').value})});
+  const d=await r.json();
+  if(d.ok){ window.location.href='/dashboard'; }
+  else{ err.textContent='⚠️ '+d.msg; err.style.display='block'; btn.textContent='Sign In →'; btn.disabled=false; }
+}
+document.getElementById('pw').addEventListener('keypress',e=>{ if(e.key==='Enter') doLogin(); });
+</script>
+{% endblock %}

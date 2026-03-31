@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Disaster Preparedness for Indian Schools & Colleges{% endblock %}
+{% block bodyclass %}no-sidebar{% endblock %}
+{% block head %}
+<style>
+nav.landing-nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:.875rem 2.5rem;display:flex;align-items:center;gap:1.5rem;
+  background:rgba(6,9,16,.8);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.landing-logo{display:flex;align-items:center;gap:.75rem;text-decoration:none;}
+.landing-logo-icon{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--red));display:flex;align-items:center;justify-content:center;font-size:.95rem;box-shadow:0 4px 12px rgba(255,107,53,.3);}
+.landing-logo-text{font-size:1rem;font-weight:700;color:var(--text);}
+.landing-logo-text span{color:var(--orange);}
+.nav-links-right{margin-left:auto;display:flex;align-items:center;gap:.5rem;}
+.nav-link{color:var(--muted2);text-decoration:none;font-size:.875rem;font-weight:500;padding:.5rem .875rem;border-radius:8px;transition:color .15s;}
+.nav-link:hover{color:var(--text);}
+
+/* Hero */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:6rem 2rem 4rem;position:relative;overflow:hidden;
+}
+.hero-glow{position:absolute;top:-20%;left:50%;transform:translateX(-50%);width:900px;height:600px;background:radial-gradient(ellipse,rgba(255,107,53,.08) 0%,transparent 70%);pointer-events:none;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 80% 60% at 50% 40%,black,transparent);pointer-events:none;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);color:var(--orange);padding:.375rem 1rem;border-radius:100px;font-size:.78rem;font-weight:600;margin-bottom:1.75rem;animation:fadeUp .6s both;}
+.hero-title{font-size:clamp(2.75rem,6vw,5rem);font-weight:800;line-height:1.05;letter-spacing:-.03em;margin-bottom:1.5rem;animation:fadeUp .6s .1s both;}
+.hero-title .hl{background:linear-gradient(135deg,var(--orange),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-desc{color:var(--muted2);font-size:1.1rem;line-height:1.7;max-width:540px;margin:0 auto 2.5rem;animation:fadeUp .6s .2s both;}
+.hero-actions{display:flex;gap:.875rem;justify-content:center;flex-wrap:wrap;animation:fadeUp .6s .3s both;}
+.hero-meta{display:flex;gap:2.5rem;justify-content:center;margin-top:4rem;animation:fadeUp .6s .4s both;}
+.hero-meta-item{text-align:center;}
+.hero-meta-num{font-size:1.75rem;font-weight:800;font-family:var(--mono);background:linear-gradient(135deg,var(--text),var(--muted2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-meta-label{font-size:.75rem;color:var(--muted);margin-top:.2rem;text-transform:uppercase;letter-spacing:.06em;}
+.hero-meta-divider{width:1px;background:var(--border);align-self:stretch;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:none;}}
+
+/* Features */
+.features-section{padding:6rem 2rem;max-width:1100px;margin:0 auto;}
+.section-eyebrow{text-align:center;color:var(--orange);font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.12em;margin-bottom:.75rem;}
+.section-h{text-align:center;font-size:clamp(1.75rem,3vw,2.5rem);font-weight:800;letter-spacing:-.02em;margin-bottom:.75rem;}
+.section-p{text-align:center;color:var(--muted2);max-width:480px;margin:0 auto 3.5rem;line-height:1.65;}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem;}
+.feature-card{
+  background:var(--bg1);border:1px solid var(--border);border-radius:var(--r2);padding:2rem;
+  transition:all .3s;position:relative;overflow:hidden;
+}
+.feature-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,107,53,.04),transparent);opacity:0;transition:opacity .3s;}
+.feature-card:hover{border-color:rgba(255,107,53,.2);transform:translateY(-4px);box-shadow:var(--glow-red);}
+.feature-card:hover::before{opacity:1;}
+.feature-icon-wrap{width:48px;height:48px;border-radius:14px;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1.25rem;}
+.feature-title{font-size:1rem;font-weight:700;margin-bottom:.5rem;}
+.feature-desc{color:var(--muted2);font-size:.875rem;line-height:1.6;}
+
+/* CTA */
+.cta-section{
+  background:linear-gradient(135deg,rgba(255,107,53,.06),rgba(255,176,32,.04));
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:6rem 2rem;text-align:center;
+}
+
+/* Partners */
+.partners{padding:3rem 2rem;text-align:center;max-width:1000px;margin:0 auto;}
+.partners-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:1.5rem;}
+.partners-row{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+.partner-tag{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.5rem 1.25rem;font-size:.8rem;color:var(--muted2);font-weight:500;}
+
+footer{padding:2rem;text-align:center;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);}
+</style>
+{% endblock %}
+{% block content %}
+<nav class="landing-nav">
+  <a href="/" class="landing-logo">
+    <div class="landing-logo-icon">🛡️</div>
+    <div class="landing-logo-text">Safe<span>Campus</span></div>
+  </a>
+  <div class="nav-links-right">
+    <a href="/alerts" class="nav-link">Live Alerts</a>
+    <a href="/emergency" class="nav-link">Emergency</a>
+    <a href="/login" class="btn btn-primary btn-sm">Sign In →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-grid"></div>
+  <div style="position:relative;z-index:1;">
+    <div class="hero-eyebrow">🇮🇳 Built for Indian Schools & Colleges</div>
+    <h1 class="hero-title">Every Student.<br>Every Campus.<br><span class="hl">Always Prepared.</span></h1>
+    <p class="hero-desc">SafeCampus turns passive safety guidelines into AI-powered interactive drills, gamified learning, and real-time disaster alerts — so your institution is ready when it matters most.</p>
+    <div class="hero-actions">
+      <a href="/login" class="btn btn-primary btn-lg">Get Started Free →</a>
+      <a href="/drill" class="btn btn-ghost btn-lg">▶ Try a Drill</a>
+    </div>
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <div class="hero-meta-num" id="stat-students">{{ stats.students }}+</div>
+        <div class="hero-meta-label">Students Trained</div>
+      </div>
+      <div class="hero-meta-divider"></div>
+      <div class="hero-meta-item">
+        <div class="hero-meta-num" id="stat-drills">{{ stats.drills }}+</div>
+        <div class="hero-meta-label">Drills Completed</div>
+      </div>
+      <div class="hero-meta-divider"></div>
+      <div class="hero-meta-item">
+        <div class="hero-meta-num">6</div>
+        <div class="hero-meta-label">Disaster Modules</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section">
+  <div class="section-eyebrow">Platform Features</div>
+  <h2 class="section-h">Everything a campus needs</h2>
+  <p class="section-p">Six powerful tools, unified in one platform. From AI chatbots to timed drills and real-time alerts.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon-wrap">🤖</div>
+      <div class="feature-title">AI Disaster Advisor</div>
+      <div class="feature-desc">Ask anything in natural language. Get instant, accurate guidance on earthquake, flood, fire, first aid, and more — powered by our disaster knowledge engine.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrap">⏱️</div>
+      <div class="feature-title">Virtual Drill Simulator</div>
+      <div class="feature-desc">Step-by-step timed drills for earthquake, fire, and flood scenarios. Real-time performance scoring and badge rewards for excellence.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrap">🌍</div>
+      <div class="feature-title">Region-Specific Alerts</div>
+      <div class="feature-desc">Live disaster advisories tailored to your district's risk profile. Sourced from NDMA and IMD with severity classification.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrap">🎮</div>
+      <div class="feature-title">Gamified Learning</div>
+      <div class="feature-desc">SafePoints, badges, and leaderboards make preparedness engaging. Students compete to climb ranks while learning life-saving skills.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrap">📊</div>
+      <div class="feature-title">Admin Analytics Dashboard</div>
+      <div class="feature-desc">Track preparedness scores, drill completion rates, and student engagement across departments. Trigger live SOS broadcasts instantly.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrap">🚨</div>
+      <div class="feature-title">One-Tap Emergency Lines</div>
+      <div class="feature-desc">All critical helplines — NDMA 1078, 112, 108, 101, NDRF — instantly accessible even without login. Built for real emergencies.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 style="font-size:2.25rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.75rem;">Ready to make your campus safer?</h2>
+  <p style="color:var(--muted2);margin-bottom:2rem;">Join today — free for all educational institutions.</p>
+  <a href="/login" class="btn btn-primary btn-lg">Create Free Account →</a>
+</section>
+
+<div class="partners">
+  <div class="partners-label">Aligned with national frameworks</div>
+  <div class="partners-row">
+    <div class="partner-tag">🏛️ NDMA India</div>
+    <div class="partner-tag">📚 NEP 2020</div>
+    <div class="partner-tag">🌦️ IMD India</div>
+    <div class="partner-tag">🛡️ NDRF</div>
+    <div class="partner-tag">🎓 UGC</div>
+    <div class="partner-tag">🇺🇳 SDG Goals</div>
+  </div>
+</div>
+
+<footer>© 2026 SafeCampus · Hackathon 2k26 · Built with Python & Flask · 🇮🇳 Made in India</footer>
+{% endblock %}

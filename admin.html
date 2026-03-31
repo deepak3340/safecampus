@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block topbar_title %}Admin Dashboard{% endblock %}
+{% block topbar_right %}
+<button class="btn btn-danger btn-sm" onclick="openModal('sos-modal')">⚡ Trigger SOS Drill</button>
+{% endblock %}
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin-bottom:2rem;}
+.dept-bar{margin-bottom:.875rem;}
+.dept-row-top{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.35rem;font-weight:500;}
+.dept-score{color:var(--amber);font-family:var(--mono);font-size:.8rem;}
+.dept-track{height:6px;background:var(--bg3);border-radius:100px;overflow:hidden;}
+.dept-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--orange),var(--amber));transition:width 1.4s cubic-bezier(.4,0,.2,1);}
+.broadcast-item{background:var(--bg3);border-radius:var(--r);padding:.875rem 1rem;margin-bottom:.5rem;border-left:3px solid var(--orange);}
+.broadcast-msg{font-size:.875rem;font-weight:500;margin-bottom:.25rem;}
+.broadcast-meta{font-size:.72rem;color:var(--muted);}
+.rating-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="content">
+  <!-- Stats -->
+  <div class="admin-stats">
+    <div class="stat-card" style="--accent:var(--blue);">
+      <div class="stat-icon">👩‍🎓</div>
+      <div class="stat-num">{{ total_students }}</div>
+      <div class="stat-label">Total Students</div>
+      <div class="stat-delta" style="color:var(--green);">↑ Active in DB</div>
+    </div>
+    <div class="stat-card" style="--accent:var(--orange);">
+      <div class="stat-icon">⏱️</div>
+      <div class="stat-num">{{ total_drills }}</div>
+      <div class="stat-label">Drills Completed</div>
+      <div class="stat-delta" style="color:var(--green);">Real data</div>
+    </div>
+    <div class="stat-card" style="--accent:var(--amber);">
+      <div class="stat-icon">📈</div>
+      <div class="stat-num">{{ avg_pts }}</div>
+      <div class="stat-label">Avg Points</div>
+      <div class="stat-delta" style="color:var(--green);">Across all students</div>
+    </div>
+    <div class="stat-card" style="--accent:var(--red);">
+      <div class="stat-icon">🧪</div>
+      <div class="stat-num">{{ total_quizzes }}</div>
+      <div class="stat-label">Quizzes Taken</div>
+      <div class="stat-delta" style="color:var(--green);">Total attempts</div>
+    </div>
+  </div>
+
+  <!-- Charts + tables -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="section-title">📅 Monthly Participation (Simulated)</div>
+      <canvas id="chart-main" height="140"></canvas>
+    </div>
+    <div class="card">
+      <div class="section-title">🏫 Department Scores</div>
+      {% for d in dept_data %}
+      <div class="dept-bar">
+        <div class="dept-row-top">
+          <span>{{ d.dept }}</span>
+          <span class="dept-score">{{ d.score }}%</span>
+        </div>
+        <div class="dept-track"><div class="dept-fill" style="width:{{ d.score }}%"></div></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <!-- Top students real DB -->
+    <div class="card card-flush">
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);">
+        <div class="section-title" style="margin-bottom:0;">🥇 Top Performers</div>
+      </div>
+      <table class="table">
+        <thead><tr><th>Student</th><th>Points</th><th>Drills</th><th>Badges</th></tr></thead>
+        <tbody>
+          {% for s in top_students %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:.625rem;">
+                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;">{{ s.name[0] }}</div>
+                <div>
+                  <div style="font-weight:600;font-size:.875rem;">{{ s.name.split()[0] }}</div>
+                  <div style="font-size:.72rem;color:var(--muted);">Lvl {{ s.level }}</div>
+                </div>
+              </div>
+            </td>
+            <td><span style="font-family:var(--mono);color:var(--amber);">{{ s.points }}</span></td>
+            <td>{{ s.drills }}</td>
+            <td>{{ s.badges }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recent drill activity real DB -->
+    <div class="card card-flush">
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);">
+        <div class="section-title" style="margin-bottom:0;">⏱️ Recent Drill Activity</div>
+      </div>
+      <table class="table">
+        <thead><tr><th>Student</th><th>Type</th><th>Rating</th><th>Time</th></tr></thead>
+        <tbody>
+          {% for d in recent_drills %}
+          {% set icons = {'earthquake':'🌍','fire':'🔥','flood':'🌊'} %}
+          <tr>
+            <td style="font-size:.875rem;">{{ d.name.split()[0] }}</td>
+            <td>{{ icons.get(d.drill_type,'⚡') }} {{ d.drill_type.capitalize() }}</td>
+            <td>
+              <span class="badge {% if d.rating=='Excellent' %}badge-green{% elif d.rating=='Good' %}badge-amber{% else %}badge-blue{% endif %}">{{ d.rating }}</span>
+            </td>
+            <td style="font-family:var(--mono);font-size:.8rem;color:var(--muted);">{{ d.time_taken }}s</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Broadcast history -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+      <div class="section-title" style="margin-bottom:0;">📣 Broadcast History</div>
+      <button class="btn btn-outline btn-sm" onclick="openModal('sos-modal')">+ New Broadcast</button>
+    </div>
+    {% if broadcasts %}
+      {% for b in broadcasts %}
+      <div class="broadcast-item">
+        <div class="broadcast-msg">{{ b.message }}</div>
+        <div class="broadcast-meta">Sent by {{ b.name }} · {{ b.sent_at[:16] }} · Type: {{ b.drill_type or 'general' }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="color:var(--muted);font-size:.875rem;text-align:center;padding:1.5rem 0;">No broadcasts yet. Trigger your first SOS drill above.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- SOS Modal -->
+<div class="modal-overlay" id="sos-modal">
+  <div class="modal-box">
+    <div class="modal-title">⚡ Trigger Emergency Drill</div>
+    <div class="modal-sub">This will broadcast an emergency alert to all students and log it in the system.</div>
+    <div class="form-group">
+      <label class="form-label">Drill Type</label>
+      <select id="drill-type-select" class="form-input">
+        <option value="earthquake">🌍 Earthquake Drill</option>
+        <option value="fire">🔥 Fire Evacuation</option>
+        <option value="flood">🌊 Flood Warning</option>
+        <option value="general">⚡ General Emergency</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Broadcast Message</label>
+      <textarea id="broadcast-msg" class="form-input" rows="3" placeholder="Enter the drill instruction message…">⚠️ DRILL IN PROGRESS: Please follow emergency evacuation protocol immediately. This is a drill.</textarea>
+    </div>
+    <div style="display:flex;gap:.75rem;">
+      <button class="btn btn-primary" onclick="sendBroadcast()">📣 Send Broadcast</button>
+      <button class="btn btn-ghost" onclick="closeModal('sos-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+// Chart
+const ctx = document.getElementById('chart-main').getContext('2d');
+new Chart(ctx, {
+  type:'bar',
+  data:{
+    labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets:[{
+      label:'Drills',
+      data:[45,52,48,61,68,55,72,65,78,82,76,90],
+      backgroundColor:'rgba(255,107,53,0.7)',borderRadius:6,borderSkipped:false
+    },{
+      label:'Quizzes',
+      data:[30,38,35,45,52,42,58,51,62,68,60,74],
+      backgroundColor:'rgba(255,176,32,0.5)',borderRadius:6,borderSkipped:false
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{labels:{color:'#6b7a99',font:{family:'Outfit',size:11}}}},
+    scales:{
+      x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7a99',font:{family:'Outfit',size:11}}},
+      y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6b7a99',font:{family:'Outfit',size:11}}}
+    }
+  }
+});
+
+async function sendBroadcast(){
+  const msg = document.getElementById('broadcast-msg').value;
+  const dtype = document.getElementById('drill-type-select').value;
+  const r = await fetch('/api/broadcast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,drill_type:dtype})});
+  const d = await r.json();
+  if(d.ok){
+    closeModal('sos-modal');
+    toast('📣 Broadcast Sent!',`Emergency drill alert sent to all students.`,'var(--orange)');
+    setTimeout(()=>location.reload(), 1800);
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+{% block topbar_right %}
+<a href="/advisor" class="btn btn-ghost btn-sm">🤖 Ask AI</a>
+{% endblock %}
+{% block head %}
+<style>
+.welcome-band{
+  background:linear-gradient(135deg,rgba(255,107,53,.08),rgba(255,176,32,.04));
+  border-bottom:1px solid var(--border);padding:1.75rem 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.welcome-h{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;}
+.welcome-h span{background:linear-gradient(135deg,var(--orange),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.welcome-sub{color:var(--muted2);margin-top:.3rem;font-size:.875rem;}
+
+.xp-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem 1.5rem;margin-bottom:1.5rem;}
+.xp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;}
+.xp-level-name{font-weight:700;font-size:.95rem;}
+.xp-pts{font-family:var(--mono);font-size:.8rem;color:var(--amber);}
+.xp-bar{height:8px;}
+.xp-hint{color:var(--muted);font-size:.75rem;margin-top:.5rem;}
+
+.module-item{
+  display:flex;align-items:center;gap:1rem;padding:.875rem 1rem;
+  background:var(--bg3);border-radius:var(--r);margin-bottom:.5rem;
+  cursor:pointer;transition:all .2s;border:1px solid transparent;
+}
+.module-item:hover{border-color:var(--border2);background:var(--bg2);}
+.module-item.done{opacity:.65;}
+.module-emoji{font-size:1.4rem;flex-shrink:0;}
+.module-name{font-size:.875rem;font-weight:600;line-height:1.2;}
+.module-meta{font-size:.75rem;color:var(--muted);margin-top:.15rem;}
+.module-pts{margin-left:auto;font-family:var(--mono);font-size:.8rem;color:var(--amber);flex-shrink:0;}
+
+.lb-row{display:flex;align-items:center;gap:.875rem;padding:.75rem;border-radius:var(--r);transition:background .15s;}
+.lb-row:hover{background:var(--bg3);}
+.lb-rank{font-family:var(--mono);font-weight:700;font-size:.875rem;width:24px;text-align:center;flex-shrink:0;}
+.lb-name{flex:1;font-size:.875rem;font-weight:500;}
+.lb-pts{font-family:var(--mono);font-size:.8rem;color:var(--amber);}
+.rank-1{color:#ffd700;}
+.rank-2{color:#e0e0e0;}
+.rank-3{color:#cd7f32;}
+
+.badge-chip{display:inline-flex;align-items:center;gap:.35rem;background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.2);color:var(--amber);padding:.3rem .75rem;border-radius:100px;font-size:.78rem;font-weight:500;margin:.25rem;}
+
+.drill-row{display:flex;align-items:center;gap:.875rem;padding:.625rem .75rem;background:var(--bg3);border-radius:var(--r);margin-bottom:.4rem;}
+.drill-type{font-size:1.1rem;flex-shrink:0;}
+.drill-name{font-size:.8rem;font-weight:600;flex:1;}
+.drill-meta{font-size:.72rem;color:var(--muted);}
+.drill-rating{font-size:.75rem;font-weight:600;}
+
+.quick-action{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem;
+  text-align:center;text-decoration:none;color:var(--text);transition:all .25s;display:block;
+}
+.quick-action:hover{border-color:rgba(255,107,53,.3);transform:translateY(-2px);box-shadow:var(--glow-red);}
+.qa-icon{font-size:1.75rem;margin-bottom:.625rem;display:block;}
+.qa-title{font-size:.875rem;font-weight:700;}
+.qa-sub{font-size:.75rem;color:var(--muted);margin-top:.2rem;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="welcome-band">
+  <div>
+    <div class="welcome-h">Good {{ 'morning' if now_hour < 12 else 'afternoon' if now_hour < 17 else 'evening' }}, <span>{{ user.name.split()[0] }}</span> 👋</div>
+    <div class="welcome-sub">{{ user.institution }} · {{ user.region.replace('_',' ').title() }}</div>
+  </div>
+  <div class="pill">📍 Level {{ user.level }} · {{ user.points }} pts</div>
+</div>
+
+<div class="content">
+  <!-- XP Bar -->
+  <div class="xp-wrap">
+    <div class="xp-top">
+      <span class="xp-level-name">
+        {% set level_names = ['','Novice','Explorer','Guardian','Responder','Champion','Expert','Hero','Master','Elite','Legend'] %}
+        🏅 Level {{ user.level }} — {{ level_names[user.level] if user.level <= 10 else 'Legend' }}
+      </span>
+      <span class="xp-pts">{{ user.points }} / {{ user.level * 100 }} pts</span>
+    </div>
+    {% set pct = [((user.points % 100)), 100] | min %}
+    <div class="progress-track xp-bar"><div class="progress-fill" style="width:{{ pct }}%"></div></div>
+    <div class="xp-hint">{{ 100 - pct }} more points to reach Level {{ user.level + 1 }}</div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="g4" style="margin-bottom:1.5rem;">
+    <div class="stat-card" style="--accent:var(--amber);">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-num">{{ user.points }}</div>
+      <div class="stat-label">SafePoints</div>
+    </div>
+    <div class="stat-card" style="--accent:var(--orange);">
+      <div class="stat-icon">⏱️</div>
+      <div class="stat-num">{{ recent_drills|length }}</div>
+      <div class="stat-label">Recent Drills</div>
+    </div>
+    <div class="stat-card" style="--accent:var(--green);">
+      <div class="stat-icon">📚</div>
+      <div class="stat-num">{{ done_ids|length }}/6</div>
+      <div class="stat-label">Modules Done</div>
+    </div>
+    <div class="stat-card" style="--accent:var(--purple);">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-num">{{ badges|length }}</div>
+      <div class="stat-label">Badges Earned</div>
+    </div>
+  </div>
+
+  <!-- Main two-col -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <div>
+      <div class="card" style="margin-bottom:1.25rem;">
+        <div class="section-title">📚 Learning Modules</div>
+        {% for m in modules %}
+        <div class="module-item {% if m.id in done_ids %}done{% endif %}" onclick="completeModule({{ m.id }},'{{ m.title }}')">
+          <span class="module-emoji">{{ m.icon }}</span>
+          <div>
+            <div class="module-name">{{ m.title }} {% if m.id in done_ids %}✅{% endif %}</div>
+            <div class="module-meta">{{ m.duration }} · {{ m.difficulty }} · {{ m.lessons }} lessons</div>
+          </div>
+          <div class="module-pts">+{{ m.pts }}pts</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if recent_drills %}
+      <div class="card">
+        <div class="section-title">⏱️ Recent Drills</div>
+        {% for d in recent_drills %}
+        {% set icons = {'earthquake':'🌍','fire':'🔥','flood':'🌊'} %}
+        <div class="drill-row">
+          <span class="drill-type">{{ icons.get(d.drill_type,'⚡') }}</span>
+          <div>
+            <div class="drill-name">{{ d.drill_type.capitalize() }} Drill</div>
+            <div class="drill-meta">{{ d.completed_at[:16] }}</div>
+          </div>
+          <div>
+            <div class="drill-rating" style="color:{% if d.rating=='Excellent' %}var(--green){% elif d.rating=='Good' %}var(--amber){% else %}var(--muted){% endif %}">{{ d.rating }}</div>
+            <div style="font-size:.72rem;color:var(--muted);">{{ d.time_taken }}s · +{{ d.points_earned }}pts</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:1.25rem;">
+        <div class="section-title">🏆 Leaderboard</div>
+        {% for s in leaderboard %}
+        <div class="lb-row">
+          <span class="lb-rank rank-{{ loop.index }}">
+            {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+          </span>
+          <span class="lb-name">{{ s.name.split()[0] }}</span>
+          <span class="lb-pts">{{ s.points }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="card">
+        <div class="section-title">🎖️ My Badges</div>
+        {% if badges %}
+          {% for b in badges %}
+          <span class="badge-chip">{{ b.badge_icon }} {{ b.badge_name }}</span>
+          {% endfor %}
+        {% else %}
+          <div style="color:var(--muted);font-size:.85rem;text-align:center;padding:1rem 0;">Complete drills and quizzes to earn badges!</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="section-title">⚡ Quick Actions</div>
+  <div class="g3">
+    <a href="/drill" class="quick-action"><span class="qa-icon">⏱️</span><div class="qa-title">Start a Drill</div><div class="qa-sub">Earn up to 100 pts</div></a>
+    <a href="/quiz" class="quick-action"><span class="qa-icon">🧪</span><div class="qa-title">Take a Quiz</div><div class="qa-sub">5 questions, 100 pts max</div></a>
+    <a href="/advisor" class="quick-action"><span class="qa-icon">🤖</span><div class="qa-title">AI Advisor</div><div class="qa-sub">Ask any safety question</div></a>
+    <a href="/alerts" class="quick-action"><span class="qa-icon">🌍</span><div class="qa-title">Live Alerts</div><div class="qa-sub">Your region's risk status</div></a>
+    <a href="/modules" class="quick-action"><span class="qa-icon">📖</span><div class="qa-title">Browse Modules</div><div class="qa-sub">{{ 6 - done_ids|length }} remaining</div></a>
+    <a href="/emergency" class="quick-action"><span class="qa-icon">🚨</span><div class="qa-title">Emergency Lines</div><div class="qa-sub">NDMA, 112, 108, 101</div></a>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function completeModule(id, title){
+  const r = await fetch('/api/complete_module',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({module_id:id})});
+  const d = await r.json();
+  if(d.ok) toast('Module Completed!',`"${title}" — +${d.points} SafePoints earned 🎉`,'var(--green)');
+}
+</script>
+{% endblock %}
